@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { X, ChevronRight } from 'lucide-react'
+import { X, ChevronRight, TrendingUp, Building2, Gem, Zap, Globe, Briefcase } from 'lucide-react'
 import { addAsset } from '@/lib/firestore'
 import type { AssetType, PriceSource } from '@/types/asset'
 import toast from 'react-hot-toast'
@@ -11,13 +11,13 @@ interface Props {
   onAdded: () => void
 }
 
-const ASSET_TYPES: { type: AssetType; label: string; emoji: string }[] = [
-  { type: 'saham', label: 'Saham IDX', emoji: '📈' },
-  { type: 'rdpu', label: 'Reksa Dana', emoji: '🏦' },
-  { type: 'emas', label: 'Emas', emoji: '🥇' },
-  { type: 'crypto', label: 'Kripto', emoji: '₿' },
-  { type: 'etf', label: 'ETF', emoji: '🌐' },
-  { type: 'other', label: 'Lainnya', emoji: '💼' },
+const ASSET_TYPES: { type: AssetType; label: string; icon: React.ReactNode; desc: string }[] = [
+  { type: 'saham', label: 'Saham IDX', icon: <TrendingUp size={18} />, desc: 'BBCA, BMRI, dll' },
+  { type: 'rdpu', label: 'Reksa Dana', icon: <Building2 size={18} />, desc: 'Pasar uang, obligasi' },
+  { type: 'emas', label: 'Emas', icon: <Gem size={18} />, desc: 'Antam, Pegadaian' },
+  { type: 'crypto', label: 'Kripto', icon: <Zap size={18} />, desc: 'BTC, ETH, dll' },
+  { type: 'etf', label: 'ETF', icon: <Globe size={18} />, desc: 'IDX30, S&P500, dll' },
+  { type: 'other', label: 'Lainnya', icon: <Briefcase size={18} />, desc: 'Deposito, obligasi' },
 ]
 
 export default function AddAssetModal({ onClose, onAdded }: Props) {
@@ -85,41 +85,43 @@ export default function AddAssetModal({ onClose, onAdded }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex items-end">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full bg-white rounded-t-3xl max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white px-5 pt-5 pb-3 border-b border-gray-100 flex items-center justify-between">
-          <h2 className="text-base font-bold text-gray-900">
+      <div className="relative w-full bg-white rounded-t-2xl max-h-[90vh] overflow-y-auto">
+        <div className="sticky top-0 bg-white px-5 pt-5 pb-3 border-b border-slate-100 flex items-center justify-between">
+          <h2 className="text-sm font-bold text-slate-900">
             {step === 'type' ? 'Pilih Tipe Aset' : 'Detail Aset'}
           </h2>
-          <button onClick={onClose} className="p-1.5 rounded-full hover:bg-gray-100">
-            <X size={18} />
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100">
+            <X size={16} className="text-slate-500" />
           </button>
         </div>
 
         {step === 'type' && (
-          <div className="p-5 grid grid-cols-2 gap-3">
-            {ASSET_TYPES.map(({ type, label, emoji }) => (
+          <div className="p-4 space-y-2">
+            {ASSET_TYPES.map(({ type, label, icon, desc }) => (
               <button
                 key={type}
-                onClick={() => {
-                  setSelectedType(type)
-                  setStep('detail')
-                }}
-                className="flex items-center gap-3 p-4 border border-gray-200 rounded-2xl hover:border-gray-400 active:scale-95 transition-all text-left"
+                onClick={() => { setSelectedType(type); setStep('detail') }}
+                className="w-full flex items-center gap-3 p-3.5 border border-slate-200 rounded-xl hover:border-slate-400 hover:bg-slate-50 active:scale-[0.98] transition-all text-left"
               >
-                <span className="text-2xl">{emoji}</span>
-                <span className="text-sm font-medium text-gray-800">{label}</span>
-                <ChevronRight size={14} className="ml-auto text-gray-300" />
+                <span className="w-9 h-9 flex items-center justify-center bg-slate-100 rounded-lg text-slate-600 shrink-0">
+                  {icon}
+                </span>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-slate-800">{label}</p>
+                  <p className="text-xs text-slate-400">{desc}</p>
+                </div>
+                <ChevronRight size={14} className="text-slate-300" />
               </button>
             ))}
           </div>
         )}
 
         {step === 'detail' && selectedType && (
-          <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          <form onSubmit={handleSubmit} className="p-4 space-y-3">
             <button
               type="button"
               onClick={() => setStep('type')}
-              className="text-xs text-gray-400 flex items-center gap-1"
+              className="text-xs text-slate-400 flex items-center gap-1 mb-1"
             >
               ← Ganti tipe
             </button>
@@ -130,11 +132,9 @@ export default function AddAssetModal({ onClose, onAdded }: Props) {
                 value={form.name}
                 onChange={(e) => set('name', e.target.value)}
                 placeholder={
-                  selectedType === 'saham'
-                    ? 'cth. Bank Central Asia'
-                    : selectedType === 'rdpu'
-                      ? 'cth. BRI Seruni Pasar Uang III'
-                      : 'Nama aset'
+                  selectedType === 'saham' ? 'Bank Central Asia'
+                  : selectedType === 'rdpu' ? 'BRI Seruni Pasar Uang III'
+                  : 'Nama aset'
                 }
                 className={inputClass}
                 required
@@ -147,13 +147,10 @@ export default function AddAssetModal({ onClose, onAdded }: Props) {
                 value={form.platform}
                 onChange={(e) => set('platform', e.target.value)}
                 placeholder={
-                  selectedType === 'saham'
-                    ? 'cth. Stockbit'
-                    : selectedType === 'rdpu'
-                      ? 'cth. Bibit'
-                      : selectedType === 'emas'
-                        ? 'cth. Tring Pegadaian'
-                        : 'Nama platform/broker'
+                  selectedType === 'saham' ? 'Stockbit / Ajaib'
+                  : selectedType === 'rdpu' ? 'Bibit'
+                  : selectedType === 'emas' ? 'Tring Pegadaian'
+                  : 'Nama platform'
                 }
                 className={inputClass}
                 required
@@ -161,7 +158,7 @@ export default function AddAssetModal({ onClose, onAdded }: Props) {
             </Field>
 
             {(selectedType === 'saham' || selectedType === 'etf') && (
-              <Field label="Kode Saham / Ticker" hint="Contoh: BBCA, BMRI, IDX30.JK">
+              <Field label="Kode Ticker" hint="cth. BBCA, IDX30.JK, SPY">
                 <input
                   type="text"
                   value={form.ticker}
@@ -172,72 +169,33 @@ export default function AddAssetModal({ onClose, onAdded }: Props) {
               </Field>
             )}
 
-            {selectedType === 'saham' && (
-              <Field label="Jumlah Lot" required>
-                <input
-                  type="number"
-                  value={form.quantity}
-                  onChange={(e) => set('quantity', e.target.value)}
-                  placeholder="10"
-                  min="0"
-                  step="1"
-                  className={inputClass}
-                  required
-                />
-              </Field>
-            )}
+            <Field
+              label={
+                selectedType === 'saham' ? 'Jumlah Lot'
+                : selectedType === 'emas' ? 'Jumlah (gram)'
+                : selectedType === 'rdpu' ? 'Jumlah Unit'
+                : 'Jumlah'
+              }
+              required
+            >
+              <input
+                type="number"
+                value={form.quantity}
+                onChange={(e) => set('quantity', e.target.value)}
+                placeholder="0"
+                min="0"
+                step="any"
+                className={inputClass}
+                required
+              />
+            </Field>
 
-            {selectedType === 'emas' && (
-              <Field label="Jumlah (gram)" required>
-                <input
-                  type="number"
-                  value={form.quantity}
-                  onChange={(e) => set('quantity', e.target.value)}
-                  placeholder="0.1"
-                  min="0"
-                  step="0.001"
-                  className={inputClass}
-                  required
-                />
-              </Field>
-            )}
-
-            {selectedType === 'rdpu' && (
-              <Field label="Jumlah Unit" required>
-                <input
-                  type="number"
-                  value={form.quantity}
-                  onChange={(e) => set('quantity', e.target.value)}
-                  placeholder="7500.1234"
-                  min="0"
-                  step="0.0001"
-                  className={inputClass}
-                  required
-                />
-              </Field>
-            )}
-
-            {(selectedType === 'crypto' || selectedType === 'other') && (
-              <Field label="Jumlah" required>
-                <input
-                  type="number"
-                  value={form.quantity}
-                  onChange={(e) => set('quantity', e.target.value)}
-                  placeholder="0"
-                  min="0"
-                  step="any"
-                  className={inputClass}
-                  required
-                />
-              </Field>
-            )}
-
-            <Field label="Total Modal (Rp)" hint="Total uang yang sudah diinvestasikan" required>
+            <Field label="Total Modal (Rp)" hint="Total uang yang diinvestasikan" required>
               <input
                 type="number"
                 value={form.costBasis}
                 onChange={(e) => set('costBasis', e.target.value)}
-                placeholder="7870458"
+                placeholder="0"
                 min="0"
                 className={inputClass}
                 required
@@ -246,15 +204,12 @@ export default function AddAssetModal({ onClose, onAdded }: Props) {
 
             <Field
               label={
-                selectedType === 'saham'
-                  ? 'Harga Saham Sekarang (Rp/lembar)'
-                  : selectedType === 'emas'
-                    ? 'Harga Emas Sekarang (Rp/gram)'
-                    : selectedType === 'rdpu'
-                      ? 'NAV Sekarang (Rp/unit)'
-                      : 'Harga Sekarang'
+                selectedType === 'saham' ? 'Harga per Lembar (Rp)'
+                : selectedType === 'emas' ? 'Harga per Gram (Rp)'
+                : selectedType === 'rdpu' ? 'NAV per Unit (Rp)'
+                : 'Harga Sekarang'
               }
-              hint="Opsional — app akan fetch otomatis saat dibuka"
+              hint="Opsional — akan di-fetch otomatis"
             >
               <input
                 type="number"
@@ -269,7 +224,7 @@ export default function AddAssetModal({ onClose, onAdded }: Props) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 bg-gray-900 text-white rounded-2xl font-semibold text-sm disabled:opacity-50 active:scale-[0.98] transition-transform"
+              className="w-full py-3 bg-indigo-600 text-white rounded-xl font-semibold text-sm disabled:opacity-50 active:scale-[0.98] transition-transform"
             >
               {loading ? 'Menyimpan...' : 'Simpan Aset'}
             </button>
@@ -281,7 +236,7 @@ export default function AddAssetModal({ onClose, onAdded }: Props) {
 }
 
 const inputClass =
-  'w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent bg-gray-50'
+  'w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-slate-50 text-slate-900 placeholder:text-slate-400'
 
 function Field({
   label,
@@ -296,9 +251,10 @@ function Field({
 }) {
   return (
     <div>
-      <label className="block text-xs font-medium text-gray-600 mb-1.5">
-        {label} {required && <span className="text-red-400">*</span>}
-        {hint && <span className="font-normal text-gray-400 ml-1">· {hint}</span>}
+      <label className="block text-xs font-medium text-slate-600 mb-1.5">
+        {label}
+        {required && <span className="text-rose-400 ml-0.5">*</span>}
+        {hint && <span className="font-normal text-slate-400 ml-1">· {hint}</span>}
       </label>
       {children}
     </div>

@@ -59,6 +59,10 @@ export async function addTransaction(tx: Omit<Transaction, 'id'>): Promise<strin
   return ref.id
 }
 
+export async function deleteTransaction(id: string): Promise<void> {
+  await deleteDoc(doc(db, 'transactions', id))
+}
+
 // ─── Portfolio History ─────────────────────────────────────────────────────
 
 export async function getPortfolioHistory(): Promise<PortfolioHistoryEntry[]> {

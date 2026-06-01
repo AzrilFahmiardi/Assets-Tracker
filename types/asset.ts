@@ -26,7 +26,7 @@ export interface Asset {
 export interface Transaction {
   id: string
   assetId: string
-  type: 'buy' | 'topup' | 'sell'
+  type: 'buy' | 'sell'
   date: Date
   quantity: number
   pricePerUnit: number

@@ -5,6 +5,8 @@ import { Plus, RefreshCw, TrendingUp, TrendingDown } from 'lucide-react'
 import { Toaster } from 'react-hot-toast'
 import AssetCard from '@/components/AssetCard'
 import PortfolioChart from '@/components/PortfolioChart'
+import AllocationChart from '@/components/AllocationChart'
+import PerformanceList from '@/components/PerformanceList'
 import AddAssetModal from '@/components/AddAssetModal'
 import { getAssets, getPortfolioHistory, savePortfolioSnapshot } from '@/lib/firestore'
 import { refreshAllPrices } from '@/lib/prices'
@@ -46,7 +48,6 @@ export default function DashboardPage() {
       setSummary(calcPortfolioSummary(updated))
       setLoadingPrices(false)
 
-      // Daily snapshot jika belum ada hari ini
       const today = new Date().toISOString().split('T')[0]
       const alreadyExists = currentHistory.some((h) => h.date === today)
       if (!alreadyExists && updates.size > 0) {
@@ -87,78 +88,89 @@ export default function DashboardPage() {
   const isProfit = (summary?.totalProfitLoss ?? 0) >= 0
 
   return (
-    <main className="min-h-screen bg-gray-50 pb-24">
+    <main className="min-h-screen bg-slate-50 pb-24">
       <Toaster position="top-center" toastOptions={{ duration: 3000 }} />
 
       {/* Header */}
-      <div className="bg-gray-900 text-white px-5 pt-14 pb-8">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-sm font-medium text-gray-400">Portofolio Saya</h1>
+      <div className="bg-gradient-to-b from-slate-900 to-slate-800 text-white px-5 pt-14 pb-8">
+        <div className="flex items-center justify-between mb-5">
+          <p className="text-xs font-medium text-slate-400 tracking-wide uppercase">
+            Portofolio Saya
+          </p>
           <button
             onClick={handleManualRefresh}
             disabled={loadingPrices}
-            className="p-2 rounded-full hover:bg-white/10 disabled:opacity-40"
+            className="p-2 rounded-lg hover:bg-white/10 disabled:opacity-40 transition-colors"
           >
-            <RefreshCw size={16} className={loadingPrices ? 'animate-spin' : ''} />
+            <RefreshCw size={15} className={loadingPrices ? 'animate-spin' : ''} />
           </button>
         </div>
 
         {initialLoad ? (
           <div>
-            <div className="w-40 h-9 bg-white/10 rounded-lg animate-pulse mb-2" />
-            <div className="w-28 h-5 bg-white/10 rounded-lg animate-pulse" />
+            <div className="w-44 h-8 bg-white/10 rounded-lg animate-pulse mb-2" />
+            <div className="w-32 h-4 bg-white/10 rounded-lg animate-pulse" />
           </div>
         ) : (
           <div>
             <p className="text-3xl font-bold tracking-tight">
               {formatRupiah(summary?.totalValue ?? 0)}
             </p>
-            <div className="flex items-center gap-2 mt-1.5">
-              {isProfit ? (
-                <TrendingUp size={14} className="text-emerald-400" />
-              ) : (
-                <TrendingDown size={14} className="text-red-400" />
-              )}
-              <span
-                className={`text-sm font-medium ${isProfit ? 'text-emerald-400' : 'text-red-400'}`}
-              >
-                {isProfit ? '+' : ''}
-                {formatRupiah(summary?.totalProfitLoss ?? 0)}{' '}
-                ({formatPercent(summary?.totalProfitLossPercent ?? 0)})
+            <div className="flex items-center gap-1.5 mt-2">
+              {isProfit
+                ? <TrendingUp size={13} className="text-emerald-400" />
+                : <TrendingDown size={13} className="text-rose-400" />
+              }
+              <span className={`text-sm font-medium ${isProfit ? 'text-emerald-400' : 'text-rose-400'}`}>
+                {isProfit ? '+' : ''}{formatRupiah(summary?.totalProfitLoss ?? 0)}{' '}
+                <span className="font-normal opacity-80">
+                  ({formatPercent(summary?.totalProfitLossPercent ?? 0)})
+                </span>
               </span>
             </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Modal: {formatRupiah(summary?.totalCost ?? 0)}
+            <p className="text-xs text-slate-500 mt-1.5">
+              Modal {formatRupiah(summary?.totalCost ?? 0)}
             </p>
           </div>
         )}
       </div>
 
-      <div className="px-4 mt-4 space-y-4">
-        {/* Grafik portofolio */}
+      <div className="px-4 mt-4 space-y-3">
+        {/* Grafik history */}
         <PortfolioChart history={history} />
+
+        {/* Insight: Alokasi + Performa */}
+        {!initialLoad && (summary?.assets?.length ?? 0) > 0 && (
+          <>
+            <AllocationChart assets={summary!.assets} />
+            <PerformanceList assets={summary!.assets} />
+          </>
+        )}
 
         {/* Daftar aset */}
         <div>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-gray-600">Aset ({assets.length})</h2>
+          <div className="flex items-center justify-between mb-3 mt-1">
+            <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+              Aset ({assets.length})
+            </h2>
           </div>
+
           {initialLoad ? (
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-white rounded-2xl p-4 h-24 animate-pulse" />
+                <div key={i} className="bg-white rounded-xl p-4 h-24 animate-pulse border border-slate-100" />
               ))}
             </div>
           ) : assets.length === 0 ? (
-            <div className="bg-white rounded-2xl p-8 text-center border border-gray-100">
-              <p className="text-2xl mb-2">📊</p>
-              <p className="text-sm font-medium text-gray-700">Belum ada aset</p>
-              <p className="text-xs text-gray-400 mt-1">
-                Tap tombol + untuk menambahkan aset pertama
-              </p>
+            <div className="bg-white rounded-xl p-10 text-center border border-slate-100">
+              <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                <TrendingUp size={20} className="text-slate-400" />
+              </div>
+              <p className="text-sm font-medium text-slate-700">Belum ada aset</p>
+              <p className="text-xs text-slate-400 mt-1">Tap + untuk menambahkan aset pertama</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {(summary?.assets ?? []).map((asset) => (
                 <AssetCard key={asset.id} asset={asset} loading={loadingPrices} />
               ))}
@@ -170,9 +182,9 @@ export default function DashboardPage() {
       {/* FAB */}
       <button
         onClick={() => setShowAddAsset(true)}
-        className="fixed bottom-6 right-5 w-14 h-14 bg-gray-900 text-white rounded-full shadow-lg flex items-center justify-center active:scale-90 transition-transform z-40"
+        className="fixed bottom-6 right-5 w-13 h-13 w-[52px] h-[52px] bg-indigo-600 text-white rounded-full shadow-lg shadow-indigo-200 flex items-center justify-center active:scale-90 transition-transform z-40"
       >
-        <Plus size={24} />
+        <Plus size={22} />
       </button>
 
       {showAddAsset && (
